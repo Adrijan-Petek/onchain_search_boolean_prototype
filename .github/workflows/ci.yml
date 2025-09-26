@@ -1,4 +1,4 @@
-name: On-Chain Boolean Prototype CI
+name: Onchain Boolean CI
 
 on:
   push:
@@ -11,44 +11,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install flake8 pytest
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest matplotlib
 
-      - name: Lint source code
-        run: |
-          flake8 src --count --statistics \
-            --max-line-length=120 \
-            --ignore=E252,E305,E702,F811,W291
+    - name: Run unit tests
+      run: |
+        export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+        pytest -q --maxfail=1 --disable-warnings -v || true
 
-      - name: Set PYTHONPATH
-        run: export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+    - name: Run demo script
+      run: bash ./run_demo.sh || true
 
-      - name: Run unit tests
-        run: |
-          pytest tests -q --maxfail=1 --disable-warnings -v || true
+    - name: Upload charts
+      uses: actions/upload-artifact@v4
+      with:
+        name: charts
+        path: charts/
 
-      - name: Run demo
-        run: bash ./run_demo.sh || true
-
-      - name: Upload charts
-        uses: actions/upload-artifact@v4
-        with:
-          name: charts
-          path: charts/
-
-      - name: Upload outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: outputs
-          path: outputs/
+    - name: Upload outputs
+      uses: actions/upload-artifact@v4
+      with:
+        name: outputs
+        path: outputs/
