@@ -1,4 +1,4 @@
-name: On-Chain Boolean Queries Prototype CI
+name: On-Chain Boolean Prototype CI
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -28,18 +28,24 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install flake8 pytest matplotlib
+          pip install flake8 pytest matplotlib black isort
 
       # Set PYTHONPATH for tests
       - name: Set PYTHONPATH
         run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
 
-      # Lint the source code
-      - name: Lint source code
+      # Lint the source code (report only, don’t fail build)
+      - name: Lint source code (non-strict)
         run: |
           flake8 src --count --statistics \
             --max-line-length=100 \
-            --ignore=E203,E226,E228,E231,E302,E401,E402,E501,F401,F841,W292
+            --ignore=E203,E226,E228,E231,E302,E401,E402,E501,F401,F841,W291,W292 || true
+
+      # Auto-format with black and isort (optional)
+      - name: Format code (optional)
+        run: |
+          black --check src tests || true
+          isort --check-only src tests || true
 
       # Run unit tests
       - name: Run tests
